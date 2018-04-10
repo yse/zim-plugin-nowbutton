@@ -39,6 +39,7 @@ buttons.
 	plugin_preferences = (
 		('hours_past_midnight', 'int', _('Hours past Midnight'), 4, (0, 12)),
 		('timestamp_format', 'string', _('Timestamp format'), '%I:%M%p -', StringAllowEmpty),
+		('text_format', 'string', _('Text'), '//{timestamp}//', StringAllowEmpty),
 	)
 
 
@@ -80,7 +81,13 @@ class MainWindowExtension(WindowExtension):
 
 		name=str(calendar_namespace.child(offset_time.strftime('%Y:%m:%d')));
 
-		text = '\n%s ' % strftime(self.plugin.preferences['timestamp_format']).lower();
+		text_format = self.plugin.preferences['text_format']
+
+		try:
+			text = text_format.format(timestamp=strftime(self.plugin.preferences['timestamp_format']).lower());
+		except KeyError:
+			text = text_format
+		text = '\n%s ' % text
 
 		ui = self.window.ui
 		try:
