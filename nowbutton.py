@@ -40,7 +40,7 @@ buttons.
 	}
 	plugin_preferences = (
 		('hours_past_midnight', 'int', _('Hours past Midnight'), 4, (0, 12)),
-		('prefix', 'string', _('Prefix'), '//[% strftime("%I:%M%p") %] - //', StringAllowEmpty),
+		('prefix', 'string', _('Prefix'), '//[% strftime("%I:%M%p") %] -//', StringAllowEmpty),
 	)
 
 
@@ -93,7 +93,7 @@ class MainWindowExtension(WindowExtension):
 
 		name=str(calendar_namespace.child(offset_time.strftime('%Y:%m:%d')));
 
-		text = '\n' + self.get_prefix()
+		text = '\n' + self.get_prefix().lower() + ' '
 
 		ui = self.window.ui
 		try:
