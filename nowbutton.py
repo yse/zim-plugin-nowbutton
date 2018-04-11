@@ -19,6 +19,8 @@ from zim.config import StringAllowEmpty
 # TODO: kern out unneccesary imports
 from zim.plugins import PluginClass, WindowExtension, extends
 from zim.actions import action
+from zim.templates import TemplateParser, TemplateProcessor, TemplateContextDict
+from zim.templates.functions import build_template_functions
 
 import logging
 
@@ -38,8 +40,7 @@ buttons.
 	}
 	plugin_preferences = (
 		('hours_past_midnight', 'int', _('Hours past Midnight'), 4, (0, 12)),
-		('timestamp_format', 'string', _('Timestamp format'), '%I:%M%p -', StringAllowEmpty),
-		('text_format', 'string', _('Text'), '//{timestamp}//', StringAllowEmpty),
+		('prefix', 'string', _('Prefix'), '//[% strftime("%I:%M%p") %] - //', StringAllowEmpty),
 	)
 
 
@@ -65,6 +66,17 @@ class MainWindowExtension(WindowExtension):
 
 	def __init__(self, plugin, window):
 		WindowExtension.__init__(self, plugin, window)
+		self.context = TemplateContextDict({})
+		self.context.update(build_template_functions())
+
+	def get_prefix(self):
+
+		parser = TemplateParser().parse(self.plugin.preferences['prefix'])
+		processor = TemplateProcessor(parser)
+		
+		lines = []
+		processor.process(lines, self.context)
+		return ''.join(lines) 
 
 	@action(
 		_('Log Entry'),
@@ -81,13 +93,7 @@ class MainWindowExtension(WindowExtension):
 
 		name=str(calendar_namespace.child(offset_time.strftime('%Y:%m:%d')));
 
-		text_format = self.plugin.preferences['text_format']
-
-		try:
-			text = text_format.format(timestamp=strftime(self.plugin.preferences['timestamp_format']).lower());
-		except KeyError:
-			text = text_format
-		text = '\n%s ' % text
+		text = '\n' + self.get_prefix()
 
 		ui = self.window.ui
 		try:
